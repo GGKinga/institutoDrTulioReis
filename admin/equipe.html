@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipe — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">Equipe <small>Gerencie os membros da equipe</small></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnNew"><i class="fas fa-plus"></i> Novo Membro</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Membros da Equipe</span>
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Buscar membro...">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Foto</th><th>Nome</th><th>Cargo / Especialidade</th><th>Bio</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Membro</h2>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nome Completo *</label>
+            <input type="text" class="form-control" id="fName" required placeholder="Dr. Nome Sobrenome">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cargo / Especialidade *</label>
+            <input type="text" class="form-control" id="fRole" required placeholder="Médico Esportivo">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Biografia</label>
+          <textarea class="form-control" id="fBio" rows="3" placeholder="Breve descrição profissional..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL da Foto (opcional)</label>
+          <input type="url" class="form-control" id="fPhoto" placeholder="https://...">
+          <small style="color:var(--admin-text-muted);font-size:.78rem;">Cole a URL de uma imagem. Deixe vazio para usar as iniciais.</small>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="fActive" checked>
+          <label for="fActive" class="form-label" style="margin:0">Ativo (visível no site)</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancel">Cancelar</button>
+      <button class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+let editingId = null;
+
+function render(filter = '') {
+  const items = (CMS.get('team') || []).filter(m =>
+    !filter || m.name.toLowerCase().includes(filter.toLowerCase()) || m.role.toLowerCase().includes(filter.toLowerCase())
+  );
+  const body = document.getElementById('tableBody');
+  if (!items.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-md"></i><h3>Nenhum membro</h3><p>Clique em "Novo Membro" para adicionar.</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = items.map(m => {
+    const initials = m.name.split(' ').slice(0,2).map(n=>n[0]).join('');
+    const avatarStyle = `width:40px;height:40px;border-radius:50%;background:var(--admin-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden;`;
+    const avatar = m.photo
+      ? `<div style="${avatarStyle}"><img src="${Admin.escapeHtml(m.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`
+      : `<div style="${avatarStyle}">${initials}</div>`;
+    return `
+      <tr>
+        <td>${avatar}</td>
+        <td><strong>${Admin.escapeHtml(m.name)}</strong></td>
+        <td>${Admin.escapeHtml(m.role)}</td>
+        <td class="td-wrap" style="max-width:220px">${Admin.escapeHtml(m.bio || '—')}</td>
+        <td>${Admin.badge(m.active ? 'Ativo' : 'Inativo', m.active ? 'green' : 'gray')}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${m.id})" title="Editar"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="del(${m.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openNew() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Novo Membro';
+  ['itemId','fName','fRole','fBio','fPhoto'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fActive').checked = true;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const m = CMS.getItem('team', id);
+  if (!m) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Editar Membro';
+  document.getElementById('itemId').value = id;
+  document.getElementById('fName').value = m.name;
+  document.getElementById('fRole').value = m.role;
+  document.getElementById('fBio').value = m.bio || '';
+  document.getElementById('fPhoto').value = m.photo || '';
+  document.getElementById('fActive').checked = !!m.active;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function save() {
+  const name = document.getElementById('fName').value.trim();
+  const role = document.getElementById('fRole').value.trim();
+  if (!name || !role) { Admin.showToast('Preencha os campos obrigatórios.', 'error'); return; }
+  const photo = document.getElementById('fPhoto').value.trim();
+  if (photo && !/^https?:\/\//i.test(photo)) { Admin.showToast('A URL da foto deve começar com http:// ou https://.', 'error'); return; }
+  const payload = { name, role, bio: document.getElementById('fBio').value.trim(), photo, active: document.getElementById('fActive').checked };
+  if (editingId) { CMS.updateItem('team', editingId, payload); Admin.showToast('Membro atualizado!'); }
+  else { CMS.addItem('team', payload); Admin.showToast('Membro adicionado!'); }
+  closeModal();
+  render(document.getElementById('searchInput').value);
+}
+
+function del(id) {
+  if (!Admin.confirm('Deseja excluir este membro?')) return;
+  CMS.deleteItem('team', id);
+  Admin.showToast('Membro excluído.', 'warning');
+  render(document.getElementById('searchInput').value);
+}
+
+document.getElementById('btnNew').addEventListener('click', openNew);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('btnSave').addEventListener('click', save);
+document.getElementById('searchInput').addEventListener('input', e => render(e.target.value));
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+render();
+</script>
+</body>
+</html>
