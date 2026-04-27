@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galeria — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .gallery-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .gallery-thumb {
+      border-radius: .5rem;
+      overflow: hidden;
+      border: 2px solid var(--admin-border);
+      background: var(--admin-body-bg);
+      position: relative;
+      aspect-ratio: 4/3;
+    }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-thumb-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,.6);
+      color: #fff;
+      font-size: .78rem;
+      padding: .4rem .6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gallery-thumb-actions {
+      position: absolute;
+      top: .4rem; right: .4rem;
+      display: none;
+      gap: .3rem;
+    }
+    .gallery-thumb:hover .gallery-thumb-actions { display: flex; }
+    .gallery-placeholder-thumb {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--admin-text-muted);
+      gap: .5rem;
+      font-size: .83rem;
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">Galeria <small>Gerencie as imagens exibidas no site</small></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnNew"><i class="fas fa-plus"></i> Adicionar Imagem</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Imagens da Galeria</span>
+          <span id="galleryCount" style="font-size:.85rem;color:var(--admin-text-muted)"></span>
+        </div>
+        <div class="card-body">
+          <div class="gallery-admin-grid" id="galleryGrid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Adicionar Imagem</h2>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <div class="form-group">
+          <label class="form-label">URL da Imagem *</label>
+          <input type="url" class="form-control" id="fUrl" required placeholder="https://exemplo.com/imagem.jpg">
+          <small style="color:var(--admin-text-muted);font-size:.78rem;">Cole a URL de uma imagem hospedada online.</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Legenda (opcional)</label>
+          <input type="text" class="form-control" id="fCaption" placeholder="Descrição breve da imagem">
+        </div>
+        <!-- Preview -->
+        <div id="previewWrap" style="display:none;margin-top:.5rem;">
+          <img id="previewImg" src="" alt="Preview" style="max-height:180px;border-radius:.4rem;border:1px solid var(--admin-border);">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancel">Cancelar</button>
+      <button class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+let editingId = null;
+
+function render() {
+  const items = CMS.get('gallery') || [];
+  const grid = document.getElementById('galleryGrid');
+  document.getElementById('galleryCount').textContent = `${items.length} imagem(ns)`;
+
+  if (!items.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><i class="fas fa-images"></i><h3>Galeria vazia</h3><p>Clique em "Adicionar Imagem" para começar.</p></div></div>`;
+    return;
+  }
+  grid.innerHTML = items.map(img => `
+    <div class="gallery-thumb">
+      <img src="${Admin.escapeHtml(img.url)}" alt="${Admin.escapeHtml(img.caption||'')}" onerror="this.parentElement.innerHTML='<div class=gallery-placeholder-thumb><i class=fas fa-image style=font-size:2rem></i><span>Imagem inválida</span></div>'">
+      ${img.caption ? `<div class="gallery-thumb-caption">${Admin.escapeHtml(img.caption)}</div>` : ''}
+      <div class="gallery-thumb-actions">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${img.id})" title="Editar" style="background:rgba(255,255,255,.9)"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="del(${img.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openNew() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Adicionar Imagem';
+  document.getElementById('itemId').value = '';
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fCaption').value = '';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const img = CMS.getItem('gallery', id);
+  if (!img) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Editar Imagem';
+  document.getElementById('itemId').value = id;
+  document.getElementById('fUrl').value = img.url;
+  document.getElementById('fCaption').value = img.caption || '';
+  document.getElementById('previewImg').src = img.url;
+  document.getElementById('previewWrap').style.display = '';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function save() {
+  const url = document.getElementById('fUrl').value.trim();
+  if (!url) { Admin.showToast('Informe a URL da imagem.', 'error'); return; }
+  const payload = { url, caption: document.getElementById('fCaption').value.trim() };
+  if (editingId) { CMS.updateItem('gallery', editingId, payload); Admin.showToast('Imagem atualizada!'); }
+  else { CMS.addItem('gallery', payload); Admin.showToast('Imagem adicionada!'); }
+  closeModal();
+  render();
+}
+
+function del(id) {
+  if (!Admin.confirm('Excluir esta imagem da galeria?')) return;
+  CMS.deleteItem('gallery', id);
+  Admin.showToast('Imagem excluída.', 'warning');
+  render();
+}
+
+// Live preview on URL input
+document.getElementById('fUrl').addEventListener('input', function () {
+  const url = this.value.trim();
+  if (url) {
+    document.getElementById('previewImg').src = url;
+    document.getElementById('previewWrap').style.display = '';
+  } else {
+    document.getElementById('previewWrap').style.display = 'none';
+  }
+});
+
+document.getElementById('btnNew').addEventListener('click', openNew);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('btnSave').addEventListener('click', save);
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+render();
+</script>
+</body>
+</html>

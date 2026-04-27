@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serviços — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">Serviços <small>Gerencie os serviços exibidos no site</small></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnNew"><i class="fas fa-plus"></i> Novo Serviço</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Lista de Serviços</span>
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Buscar serviço...">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Ícone</th><th>Título</th><th>Descrição</th><th>Status</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Serviço</h2>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <div class="form-group">
+          <label class="form-label">Título *</label>
+          <input type="text" class="form-control" id="fTitle" required placeholder="Nome do serviço">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ícone Font Awesome</label>
+          <input type="text" class="form-control" id="fIcon" placeholder="fa-heartbeat">
+          <small style="color:var(--admin-text-muted);font-size:.78rem;">Ex: fa-heartbeat, fa-brain, fa-dumbbell. Veja em <a href="https://fontawesome.com/icons" target="_blank">fontawesome.com</a></small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição *</label>
+          <textarea class="form-control" id="fDesc" rows="4" required placeholder="Descreva o serviço..."></textarea>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="fActive" checked>
+          <label for="fActive" class="form-label" style="margin:0">Ativo (visível no site)</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancel">Cancelar</button>
+      <button class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+let editingId = null;
+
+function render(filter = '') {
+  const items = (CMS.get('services') || []).filter(s =>
+    !filter || s.title.toLowerCase().includes(filter.toLowerCase()) || s.description.toLowerCase().includes(filter.toLowerCase())
+  );
+  const body = document.getElementById('tableBody');
+  if (!items.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-stethoscope"></i><h3>Nenhum serviço</h3><p>Clique em "Novo Serviço" para adicionar.</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = items.map((s, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><i class="fas ${Admin.escapeHtml(s.icon || 'fa-star')}" style="font-size:1.2rem;color:var(--admin-primary)"></i></td>
+      <td><strong>${Admin.escapeHtml(s.title)}</strong></td>
+      <td class="td-wrap">${Admin.escapeHtml(s.description)}</td>
+      <td>${Admin.badge(s.active ? 'Ativo' : 'Inativo', s.active ? 'green' : 'gray')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${s.id})" title="Editar"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="del(${s.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openNew() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Novo Serviço';
+  document.getElementById('itemId').value = '';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fIcon').value = 'fa-star';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fActive').checked = true;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const s = CMS.getItem('services', id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Editar Serviço';
+  document.getElementById('itemId').value = id;
+  document.getElementById('fTitle').value = s.title;
+  document.getElementById('fIcon').value = s.icon || '';
+  document.getElementById('fDesc').value = s.description;
+  document.getElementById('fActive').checked = !!s.active;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function save() {
+  const title = document.getElementById('fTitle').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  if (!title || !desc) { Admin.showToast('Preencha os campos obrigatórios.', 'error'); return; }
+  const payload = {
+    title,
+    icon: document.getElementById('fIcon').value.trim() || 'fa-star',
+    description: desc,
+    active: document.getElementById('fActive').checked,
+  };
+  if (editingId) {
+    CMS.updateItem('services', editingId, payload);
+    Admin.showToast('Serviço atualizado com sucesso!');
+  } else {
+    CMS.addItem('services', payload);
+    Admin.showToast('Serviço criado com sucesso!');
+  }
+  closeModal();
+  render(document.getElementById('searchInput').value);
+}
+
+function del(id) {
+  if (!Admin.confirm('Deseja excluir este serviço?')) return;
+  CMS.deleteItem('services', id);
+  Admin.showToast('Serviço excluído.', 'warning');
+  render(document.getElementById('searchInput').value);
+}
+
+document.getElementById('btnNew').addEventListener('click', openNew);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('btnSave').addEventListener('click', save);
+document.getElementById('searchInput').addEventListener('input', e => render(e.target.value));
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+render();
+</script>
+</body>
+</html>

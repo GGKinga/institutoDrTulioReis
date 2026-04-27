@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-icon"><i class="fas fa-heartbeat"></i></div>
+      <h1>Instituto Dr Túlio Reis</h1>
+      <p>Área Administrativa — faça login para continuar</p>
+    </div>
+
+    <div class="login-error" id="loginError">
+      <i class="fas fa-exclamation-circle"></i> Usuário ou senha incorretos.
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-user"></i> Usuário</label>
+        <input type="text" class="form-control" id="inputUser" placeholder="seu usuário" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-lock"></i> Senha</label>
+        <div style="position:relative;">
+          <input type="password" class="form-control" id="inputPass" placeholder="sua senha" autocomplete="current-password" required style="padding-right:2.5rem;">
+          <button type="button" id="togglePass" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;">
+            <i class="fas fa-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem;margin-top:.5rem;">
+        <i class="fas fa-sign-in-alt"></i> Entrar
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:1.5rem;">
+      <a href="../index.html" style="font-size:.83rem;color:#94a3b8;">
+        <i class="fas fa-arrow-left"></i> Voltar ao site
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  // If already logged in, redirect to dashboard
+  if (Admin.isLoggedIn()) window.location.href = 'dashboard.html';
+
+  // Toggle password visibility
+  document.getElementById('togglePass').addEventListener('click', function () {
+    const inp = document.getElementById('inputPass');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  });
+
+  // Login form
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const user = document.getElementById('inputUser').value.trim();
+    const pass = document.getElementById('inputPass').value;
+    const err = document.getElementById('loginError');
+    if (Admin.login(user, pass)) {
+      window.location.href = 'dashboard.html';
+    } else {
+      err.style.display = 'block';
+      setTimeout(() => err.style.display = 'none', 4000);
+    }
+  });
+</script>
+</body>
+</html>

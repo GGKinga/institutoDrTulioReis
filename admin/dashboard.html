@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar injected by sidebar.js -->
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">
+        Dashboard
+        <small>Visão geral do site</small>
+      </div>
+      <div class="topbar-actions">
+        <a href="agendamentos.html" class="topbar-badge" title="Agendamentos novos">
+          <i class="fas fa-calendar-check"></i>
+          <span class="dot" id="apptDot" style="display:none"></span>
+        </a>
+        <a href="mensagens.html" class="topbar-badge" title="Mensagens não lidas">
+          <i class="fas fa-envelope"></i>
+          <span class="dot" id="msgDot" style="display:none"></span>
+        </a>
+        <div class="topbar-user">
+          <div class="topbar-avatar">A</div>
+          <span class="topbar-username">Admin</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="admin-content">
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Two-column layout -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+        <!-- Recent Appointments -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-calendar-check" style="color:var(--admin-primary)"></i> Agendamentos Recentes</span>
+            <a href="agendamentos.html" class="btn btn-ghost btn-sm">Ver todos</a>
+          </div>
+          <div class="table-wrap">
+            <table id="recentAppts">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Serviço</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody id="recentApptsBody">
+                <tr><td colspan="4"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>Nenhum agendamento ainda.</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Messages -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-envelope" style="color:var(--admin-warning)"></i> Mensagens Recentes</span>
+            <a href="mensagens.html" class="btn btn-ghost btn-sm">Ver todas</a>
+          </div>
+          <div class="table-wrap">
+            <table id="recentMsgs">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Assunto</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody id="recentMsgsBody">
+                <tr><td colspan="4"><div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma mensagem ainda.</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="margin-top:1.25rem;">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-bolt" style="color:var(--admin-warning)"></i> Ações Rápidas</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:1rem;">
+          <a href="servicos.html" class="btn btn-ghost"><i class="fas fa-stethoscope"></i> Gerenciar Serviços</a>
+          <a href="equipe.html" class="btn btn-ghost"><i class="fas fa-user-md"></i> Gerenciar Equipe</a>
+          <a href="depoimentos.html" class="btn btn-ghost"><i class="fas fa-comments"></i> Depoimentos</a>
+          <a href="galeria.html" class="btn btn-ghost"><i class="fas fa-images"></i> Galeria</a>
+          <a href="artigos.html" class="btn btn-ghost"><i class="fas fa-newspaper"></i> Novo Artigo</a>
+          <a href="configuracoes.html" class="btn btn-ghost"><i class="fas fa-cog"></i> Configurações</a>
+          <a href="../index.html" target="_blank" class="btn btn-primary"><i class="fas fa-external-link-alt"></i> Ver Site</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+const appointments = CMS.get('appointments') || [];
+const messages = CMS.get('messages') || [];
+const services = CMS.get('services') || [];
+const team = CMS.get('team') || [];
+const articles = CMS.get('articles') || [];
+
+const newAppts = appointments.filter(a => a.status === 'novo').length;
+const unreadMsgs = messages.filter(m => !m.read).length;
+
+// Topbar dots
+if (newAppts > 0) document.getElementById('apptDot').style.display = '';
+if (unreadMsgs > 0) document.getElementById('msgDot').style.display = '';
+
+// Stats
+document.getElementById('statsGrid').innerHTML = `
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+    <div>
+      <div class="stat-value">${appointments.length}</div>
+      <div class="stat-label">Total de Agendamentos</div>
+      ${newAppts > 0 ? `<small style="color:var(--admin-warning);font-size:.75rem;">${newAppts} novo(s)</small>` : ''}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon yellow"><i class="fas fa-envelope"></i></div>
+    <div>
+      <div class="stat-value">${messages.length}</div>
+      <div class="stat-label">Mensagens de Contato</div>
+      ${unreadMsgs > 0 ? `<small style="color:var(--admin-danger);font-size:.75rem;">${unreadMsgs} não lida(s)</small>` : ''}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-stethoscope"></i></div>
+    <div>
+      <div class="stat-value">${services.filter(s=>s.active).length}</div>
+      <div class="stat-label">Serviços Ativos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
+    <div>
+      <div class="stat-value">${team.filter(t=>t.active).length}</div>
+      <div class="stat-label">Membros da Equipe</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fas fa-newspaper"></i></div>
+    <div>
+      <div class="stat-value">${articles.filter(a=>a.published).length}</div>
+      <div class="stat-label">Artigos Publicados</div>
+    </div>
+  </div>
+`;
+
+// Recent appointments
+const apptBody = document.getElementById('recentApptsBody');
+if (appointments.length) {
+  apptBody.innerHTML = appointments.slice(-5).reverse().map(a => `
+    <tr>
+      <td>${Admin.escapeHtml(a.name)}</td>
+      <td class="td-wrap">${Admin.escapeHtml(a.service || '—')}</td>
+      <td>${Admin.badge(a.status === 'novo' ? 'Novo' : a.status === 'confirmado' ? 'Confirmado' : 'Concluído', a.status === 'novo' ? 'yellow' : a.status === 'confirmado' ? 'blue' : 'green')}</td>
+      <td>${Admin.formatDate(a.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+// Recent messages
+const msgBody = document.getElementById('recentMsgsBody');
+if (messages.length) {
+  msgBody.innerHTML = messages.slice(-5).reverse().map(m => `
+    <tr>
+      <td>${Admin.escapeHtml(m.name)}</td>
+      <td class="td-wrap">${Admin.escapeHtml(m.subject || '(sem assunto)')}</td>
+      <td>${Admin.badge(m.read ? 'Lida' : 'Nova', m.read ? 'gray' : 'red')}</td>
+      <td>${Admin.formatDate(m.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+</script>
+</body>
+</html>

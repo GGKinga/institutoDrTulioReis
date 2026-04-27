@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">Configurações <small>Informações gerais do site</small></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Salvar Configurações</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <form id="settingsForm">
+
+        <!-- Identidade -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-header"><span class="card-title"><i class="fas fa-id-card" style="color:var(--admin-primary)"></i> Identidade do Site</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nome do Site</label>
+                <input type="text" class="form-control" name="siteName" placeholder="Instituto Dr Túlio Reis">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tagline / Slogan</label>
+                <input type="text" class="form-control" name="tagline" placeholder="Saúde & Performance">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Texto da Seção Sobre</label>
+              <textarea class="form-control" name="about" rows="4" placeholder="Descrição do instituto..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-header"><span class="card-title"><i class="fas fa-star" style="color:var(--admin-warning)"></i> Seção Principal (Hero)</span></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Título Principal</label>
+              <input type="text" class="form-control" name="heroTitle" placeholder="Sua Saúde e Performance em Boas Mãos">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subtítulo</label>
+              <input type="text" class="form-control" name="heroSubtitle" placeholder="Cuidamos de você com excelência...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Texto do Botão CTA</label>
+              <input type="text" class="form-control" name="heroCta" placeholder="Agendar Consulta">
+            </div>
+          </div>
+        </div>
+
+        <!-- Contato -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-header"><span class="card-title"><i class="fas fa-phone" style="color:var(--admin-success)"></i> Informações de Contato</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Telefone</label>
+                <input type="text" class="form-control" name="phone" placeholder="(11) 99999-9999">
+              </div>
+              <div class="form-group">
+                <label class="form-label">WhatsApp (apenas números, com DDI)</label>
+                <input type="text" class="form-control" name="whatsapp" placeholder="5511999999999">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input type="email" class="form-control" name="email" placeholder="contato@...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Endereço</label>
+                <input type="text" class="form-control" name="address" placeholder="Rua, Número — Cidade, UF">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Redes Sociais -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-header"><span class="card-title"><i class="fas fa-share-alt" style="color:var(--admin-info)"></i> Redes Sociais</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label"><i class="fab fa-facebook"></i> Facebook (URL)</label>
+                <input type="url" class="form-control" name="facebook" placeholder="https://facebook.com/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fab fa-instagram"></i> Instagram (URL)</label>
+                <input type="url" class="form-control" name="instagram" placeholder="https://instagram.com/...">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label"><i class="fab fa-youtube"></i> YouTube (URL)</label>
+                <input type="url" class="form-control" name="youtube" placeholder="https://youtube.com/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fab fa-linkedin"></i> LinkedIn (URL)</label>
+                <input type="url" class="form-control" name="linkedin" placeholder="https://linkedin.com/...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card" style="border-color:var(--admin-danger);margin-bottom:1.25rem;">
+          <div class="card-header" style="border-color:var(--admin-danger);background:#fef2f2;">
+            <span class="card-title" style="color:var(--admin-danger)"><i class="fas fa-exclamation-triangle"></i> Zona de Perigo</span>
+          </div>
+          <div class="card-body">
+            <p style="margin-bottom:1rem;font-size:.9rem;color:var(--admin-text-muted)">
+              Estas ações são irreversíveis. Tenha certeza antes de prosseguir.
+            </p>
+            <button type="button" class="btn btn-danger" id="btnReset">
+              <i class="fas fa-undo"></i> Restaurar Dados Padrão
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+// Load current settings into form
+function loadForm() {
+  const s = CMS.get('settings') || {};
+  const form = document.getElementById('settingsForm');
+  Object.keys(s).forEach(key => {
+    const el = form.elements[key];
+    if (el) el.value = s[key] || '';
+  });
+}
+
+// Save settings
+document.getElementById('btnSave').addEventListener('click', function () {
+  const form = document.getElementById('settingsForm');
+  const data = {};
+  new FormData(form).forEach((val, key) => { data[key] = val; });
+  CMS.set('settings', Object.assign({}, CMS.get('settings') || {}, data));
+  Admin.showToast('Configurações salvas com sucesso!');
+});
+
+// Reset
+document.getElementById('btnReset').addEventListener('click', function () {
+  if (!Admin.confirm('ATENÇÃO: Isso irá restaurar TODOS os dados para o padrão de fábrica (serviços, equipe, depoimentos, etc.), excluindo todos os dados inseridos. Deseja continuar?')) return;
+  CMS.reset();
+  Admin.showToast('Dados restaurados para o padrão.', 'warning');
+  loadForm();
+});
+
+loadForm();
+</script>
+</body>
+</html>

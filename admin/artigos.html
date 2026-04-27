@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artigos — Admin · Instituto Dr Túlio Reis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <div id="sidebarPlaceholder"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">Artigos <small>Gerencie os artigos e blog do site</small></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnNew"><i class="fas fa-plus"></i> Novo Artigo</button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Lista de Artigos</span>
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Buscar artigo...">
+            </div>
+            <select class="form-control" id="filterPublished" style="width:auto;">
+              <option value="">Todos</option>
+              <option value="published">Publicados</option>
+              <option value="draft">Rascunhos</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Título</th><th>Autor</th><th>Data</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Artigo</h2>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <div class="form-group">
+          <label class="form-label">Título *</label>
+          <input type="text" class="form-control" id="fTitle" required placeholder="Título do artigo">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Autor *</label>
+            <input type="text" class="form-control" id="fAuthor" required placeholder="Dr. Nome">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de Publicação</label>
+            <input type="date" class="form-control" id="fDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resumo (excerpt) *</label>
+          <textarea class="form-control" id="fExcerpt" rows="2" required placeholder="Breve descrição do artigo para a página inicial..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Conteúdo Completo</label>
+          <textarea class="form-control" id="fContent" rows="8" placeholder="Conteúdo completo do artigo (suporta texto simples ou HTML)..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL da Imagem de Capa (opcional)</label>
+          <input type="url" class="form-control" id="fCover" placeholder="https://...">
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="fPublished" checked>
+          <label for="fPublished" class="form-label" style="margin:0">Publicado (visível no site)</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancel">Cancelar</button>
+      <button class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/cms.js"></script>
+<script src="../assets/js/sidebar.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+Admin.checkAuth();
+CMS.init();
+Admin.initSidebar();
+
+let editingId = null;
+
+function render() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const pubFilter = document.getElementById('filterPublished').value;
+  let items = CMS.get('articles') || [];
+
+  if (pubFilter === 'published') items = items.filter(a => a.published);
+  if (pubFilter === 'draft') items = items.filter(a => !a.published);
+  if (search) items = items.filter(a =>
+    (a.title||'').toLowerCase().includes(search) ||
+    (a.author||'').toLowerCase().includes(search)
+  );
+
+  const body = document.getElementById('tableBody');
+  if (!items.length) {
+    body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-newspaper"></i><h3>Nenhum artigo</h3><p>Clique em "Novo Artigo" para criar.</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = items.slice().reverse().map(a => `
+    <tr>
+      <td class="td-wrap"><strong>${Admin.escapeHtml(a.title)}</strong><br><small style="color:var(--admin-text-muted)">${Admin.escapeHtml(a.excerpt||'')}</small></td>
+      <td>${Admin.escapeHtml(a.author)}</td>
+      <td>${Admin.escapeHtml(a.date||'—')}</td>
+      <td>${Admin.badge(a.published ? 'Publicado' : 'Rascunho', a.published ? 'green' : 'yellow')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${a.id})" title="Editar"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="del(${a.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openNew() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Novo Artigo';
+  ['itemId','fTitle','fAuthor','fExcerpt','fContent','fCover'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fPublished').checked = true;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const a = CMS.getItem('articles', id);
+  if (!a) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Editar Artigo';
+  document.getElementById('itemId').value = id;
+  document.getElementById('fTitle').value = a.title;
+  document.getElementById('fAuthor').value = a.author;
+  document.getElementById('fDate').value = a.date || '';
+  document.getElementById('fExcerpt').value = a.excerpt || '';
+  document.getElementById('fContent').value = a.content || '';
+  document.getElementById('fCover').value = a.coverImage || '';
+  document.getElementById('fPublished').checked = !!a.published;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function save() {
+  const title = document.getElementById('fTitle').value.trim();
+  const author = document.getElementById('fAuthor').value.trim();
+  const excerpt = document.getElementById('fExcerpt').value.trim();
+  if (!title || !author || !excerpt) { Admin.showToast('Preencha os campos obrigatórios.', 'error'); return; }
+  const payload = { title, author, date: document.getElementById('fDate').value, excerpt, content: document.getElementById('fContent').value.trim(), coverImage: document.getElementById('fCover').value.trim(), published: document.getElementById('fPublished').checked };
+  if (editingId) { CMS.updateItem('articles', editingId, payload); Admin.showToast('Artigo atualizado!'); }
+  else { CMS.addItem('articles', payload); Admin.showToast('Artigo criado!'); }
+  closeModal();
+  render();
+}
+
+function del(id) {
+  if (!Admin.confirm('Excluir este artigo?')) return;
+  CMS.deleteItem('articles', id);
+  Admin.showToast('Artigo excluído.', 'warning');
+  render();
+}
+
+document.getElementById('btnNew').addEventListener('click', openNew);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('btnSave').addEventListener('click', save);
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('filterPublished').addEventListener('change', render);
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+render();
+</script>
+</body>
+</html>
