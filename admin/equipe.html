@@ -157,7 +157,9 @@ function save() {
   const name = document.getElementById('fName').value.trim();
   const role = document.getElementById('fRole').value.trim();
   if (!name || !role) { Admin.showToast('Preencha os campos obrigatórios.', 'error'); return; }
-  const payload = { name, role, bio: document.getElementById('fBio').value.trim(), photo: document.getElementById('fPhoto').value.trim(), active: document.getElementById('fActive').checked };
+  const photo = document.getElementById('fPhoto').value.trim();
+  if (photo && !/^https?:\/\//i.test(photo)) { Admin.showToast('A URL da foto deve começar com http:// ou https://.', 'error'); return; }
+  const payload = { name, role, bio: document.getElementById('fBio').value.trim(), photo, active: document.getElementById('fActive').checked };
   if (editingId) { CMS.updateItem('team', editingId, payload); Admin.showToast('Membro atualizado!'); }
   else { CMS.addItem('team', payload); Admin.showToast('Membro adicionado!'); }
   closeModal();

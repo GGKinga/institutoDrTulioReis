@@ -173,7 +173,9 @@ function save() {
   const author = document.getElementById('fAuthor').value.trim();
   const excerpt = document.getElementById('fExcerpt').value.trim();
   if (!title || !author || !excerpt) { Admin.showToast('Preencha os campos obrigatórios.', 'error'); return; }
-  const payload = { title, author, date: document.getElementById('fDate').value, excerpt, content: document.getElementById('fContent').value.trim(), coverImage: document.getElementById('fCover').value.trim(), published: document.getElementById('fPublished').checked };
+  const coverImage = document.getElementById('fCover').value.trim();
+  if (coverImage && !/^https?:\/\//i.test(coverImage)) { Admin.showToast('A URL da imagem de capa deve começar com http:// ou https://.', 'error'); return; }
+  const payload = { title, author, date: document.getElementById('fDate').value, excerpt, content: document.getElementById('fContent').value.trim(), coverImage, published: document.getElementById('fPublished').checked };
   if (editingId) { CMS.updateItem('articles', editingId, payload); Admin.showToast('Artigo atualizado!'); }
   else { CMS.addItem('articles', payload); Admin.showToast('Artigo criado!'); }
   closeModal();

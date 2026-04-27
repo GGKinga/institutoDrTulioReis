@@ -67,7 +67,7 @@
       <button class="btn btn-ghost" id="btnCancel">Fechar</button>
       <button class="btn btn-success" id="btnConfirm"><i class="fas fa-check"></i> Confirmar</button>
       <button class="btn btn-primary" id="btnComplete"><i class="fas fa-check-double"></i> Concluir</button>
-      <button class="btn btn-danger" id="btnCancel2"><i class="fas fa-times"></i> Cancelar</button>
+      <button class="btn btn-danger" id="btnCancelAppointment"><i class="fas fa-times"></i> Cancelar</button>
     </div>
   </div>
 </div>
@@ -169,7 +169,7 @@ document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('btnCancel').addEventListener('click', closeModal);
 document.getElementById('btnConfirm').addEventListener('click', () => setStatus('confirmado'));
 document.getElementById('btnComplete').addEventListener('click', () => setStatus('concluido'));
-document.getElementById('btnCancel2').addEventListener('click', () => setStatus('cancelado'));
+document.getElementById('btnCancelAppointment').addEventListener('click', () => setStatus('cancelado'));
 document.getElementById('filterStatus').addEventListener('change', render);
 document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });

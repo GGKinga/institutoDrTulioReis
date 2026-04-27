@@ -90,7 +90,7 @@ const CMS = (() => {
 
   function addItem(collection, item) {
     const data = _read();
-    item.id = Date.now();
+    item.id = Date.now() + Math.floor(Math.random() * 1000);
     item.createdAt = new Date().toISOString();
     if (!data[collection]) data[collection] = [];
     data[collection].push(item);

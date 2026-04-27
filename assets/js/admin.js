@@ -4,6 +4,9 @@
  */
 const Admin = (() => {
   const SESSION_KEY = 'idtr_admin_session';
+  // NOTE: This is a frontend-only demo site using client-side session storage.
+  // For production deployment on a server, replace with server-side authentication.
+  // Change this password before deploying to a public URL.
   const CREDENTIALS = { username: 'admin', password: 'admin@idtr2024' };
 
   // ── Auth ─────────────────────────────────────────────────────────

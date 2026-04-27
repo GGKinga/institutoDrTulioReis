@@ -167,6 +167,7 @@ function closeModal() { document.getElementById('modal').classList.remove('open'
 function save() {
   const url = document.getElementById('fUrl').value.trim();
   if (!url) { Admin.showToast('Informe a URL da imagem.', 'error'); return; }
+  if (!/^https?:\/\//i.test(url)) { Admin.showToast('A URL deve começar com http:// ou https://.', 'error'); return; }
   const payload = { url, caption: document.getElementById('fCaption').value.trim() };
   if (editingId) { CMS.updateItem('gallery', editingId, payload); Admin.showToast('Imagem atualizada!'); }
   else { CMS.addItem('gallery', payload); Admin.showToast('Imagem adicionada!'); }
@@ -181,13 +182,14 @@ function del(id) {
   render();
 }
 
-// Live preview on URL input
+// Live preview on URL input — only allow http/https URLs
 document.getElementById('fUrl').addEventListener('input', function () {
   const url = this.value.trim();
-  if (url) {
+  if (url && /^https?:\/\//i.test(url)) {
     document.getElementById('previewImg').src = url;
     document.getElementById('previewWrap').style.display = '';
   } else {
+    document.getElementById('previewImg').src = '';
     document.getElementById('previewWrap').style.display = 'none';
   }
 });
